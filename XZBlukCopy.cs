@@ -169,22 +169,6 @@ namespace ShapefileToMySQL2
             return "("+builder.ToString().Substring(0, builder.ToString().Length - 1)+"),";
         }
 
-
-        //public string ConstructSql(string tableName, DataRow row, ColumnMapItemColl mapItemCollection)
-        //{
-        //    string columnNames = GetColumnNames(mapItemCollection, ColumnProperty.Destination);
-        //   // insert into tableName(A,B,C...) values ({0})
-        //    string baseSql = string.Format("insert into {0}({1}) values({2})", tableName, columnNames, "{0}");
-        //    StringBuilder builder = new StringBuilder();
-        //    foreach (XZColumnMapItem columnMapItem in mapItemCollection)
-        //    {
-        //        string constructedValue = ConstructIndividualValue(columnMapItem.DataType,
-        //                                                           row[columnMapItem.SourceColumn].ToString());
-        //        builder.Append(constructedValue);
-        //    }
-        //    return string.Format(baseSql, builder.ToString().Substring(0, builder.ToString().Length - 1));
-        //}
-
         private string ConstructIndividualValue(string dataType, string value)
         {
             string returnValue = "";
