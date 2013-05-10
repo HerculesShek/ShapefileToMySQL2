@@ -1,0 +1,8 @@
+ShapefileToMySQL2
+=================
+
+<<<<<<< HEAD
+将shapefile文件导入到mysql数据库中
+=======
+将shapefile文件导入到mysql数据库中，提供mysqlbulkCopy的优化版本
+>>>>>>> 2c8a037b0e59cac63fe18f0f60699c1725390e37

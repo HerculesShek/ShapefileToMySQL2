@@ -15,7 +15,7 @@ namespace ShapefileToMySQL2
         private ColumnMapItemColl _columnMapItems;
         private MySqlConnection _destinationDbConnection;
         private String _destinationTableName;
-        private int _batchSize;
+        private int _batchSize;//每次批量插入的数量
         public ColumnMapItemColl ColumnMapItems
         {
             get { return _columnMapItems; }
