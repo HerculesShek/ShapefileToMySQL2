@@ -1127,58 +1127,6 @@ namespace ShapefileToMySQL2
             return count;
         }
 
-        //public int BatchInsertIntoMySQL(Dictionary<uint, FeatureDataRow> d)
-        //{
-        //    int count = 0;
-        //    string connStr = String.Format("server={0};uid={1};pwd={2};database={3}",
-        //       "localhost", "root", "xrt512", "shapefiles");
-        //    MySqlConnection conn = new MySqlConnection(connStr);
-        //    conn.Open();
-
-
-        //    DataTable schemaTable = this.DbaseFile.GetSchemaTable();
-        //    String sql = @"insert into " + TableName +
-        //                 @"(oid,shapeType,shapeInfo,minX,maxX,minY,maxY,";
-        //    StringBuilder buffer = new StringBuilder();
-        //    for (int i = 1; i < schemaTable.Rows.Count; i++)//从1开始，跳过oid那一列
-        //    {   //TODO 这个地方还需要判断一下精度，唯一性等约束
-        //        String columnName = (String)schemaTable.Rows[i]["ColumnName"];
-        //        buffer.Append(columnName).Append(",");
-        //    }
-        //    sql += buffer.Replace(",", ") values (");
-        //    int sqlLength = sql.Length;
-            
-        //    for (uint oid = 0; oid < _featureCount; oid++)
-        //    {
-        //        FeatureDataRow fdr = d[oid];
-        //        IGeometry g = fdr.Geometry;
-        //        Envelope e = g.EnvelopeInternal;
-        //        MySqlParameter[] parames = new MySqlParameter[this.DbaseFile.GetSchemaTable().Rows.Count + 6];
-        //        parames[0] = new MySqlParameter("@oid", oid);
-        //        parames[1] = new MySqlParameter("@shapeType", _shapeType);
-        //        parames[2] = new MySqlParameter("@shapeInfo", GeometryToWKB.Write(g));
-        //        parames[3] = new MySqlParameter("@minX", e.MinX);
-        //        parames[4] = new MySqlParameter("@maxX", e.MaxX);
-        //        parames[5] = new MySqlParameter("@minY", e.MinY);
-        //        parames[6] = new MySqlParameter("@maxY", e.MaxY);
-
-        //        for (int i = 1; i < schemaTable.Rows.Count; i++)//从1开始，跳过oid那一列
-        //        {   //这个地方还需要判断一下精度，唯一性等约束
-        //            this.DbaseFile.CurrentRecordOid = oid;
-        //            String columnName = (String)schemaTable.Rows[i]["ColumnName"];
-        //            parames[6 + i] = new MySqlParameter("@" + columnName, this.DbaseFile.GetValueByColumnName(columnName));
-        //            //Console.WriteLine(this.DbaseFile.GetValueByColumnName(columnName));
-        //        }
-
-        //        MySqlCommand cmd = new MySqlCommand(sql, conn);
-        //        cmd.Parameters.Clear(); //清除上一次传入的参数！
-        //        cmd.Parameters.AddRange(parames);
-        //        count += cmd.ExecuteNonQuery();
-        //    }
-        //    conn.Close();
-        //    return count;
-        //}
-
         //获取所有的集合元素的信息
         public Dictionary<uint, FeatureDataRow> GetFeatures()
         {
