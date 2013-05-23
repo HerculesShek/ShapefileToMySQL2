@@ -166,7 +166,7 @@ namespace ShapefileToMySQL2
                 {
                     _dbaseColumns[i] = new DbaseField();
                     //是ASCII码值,所以要使用这个方法读取
-                    _dbaseColumns[i].ColumnName = Encoding.UTF7.GetString((br.ReadBytes(11))).Replace("\0", "").Trim();
+                    _dbaseColumns[i].ColumnName = Encoding.Default.GetString((br.ReadBytes(11))).Replace("\0", "").Trim();
                     var fieldtype = br.ReadChar();
                     switch (fieldtype)
                     {

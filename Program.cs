@@ -12,7 +12,8 @@ namespace ShapefileToMySQL2
     {
         static void Main(string[] args)
         {
-             Progress();
+             //Progress();
+             Progress3();
 
             //Console.WriteLine(typeof(byte[]).ToString());
             //Console.ReadKey();
@@ -42,7 +43,7 @@ namespace ShapefileToMySQL2
             //计时代码
             Console.WriteLine("\r\n 开始导入数据。。。。");
             //Console.Write(sf.InsertIntoMySQL(d) + "行数据");
-            DataTable ds = sf.InsertIntoDataTable(d);
+            DataTable ds = sf.InsertIntoShapefileAndDBaseTable(d);
             sf.InsertWithMySqlBulkCopy(ds);
 
             Console.Write("导入结束！\r\n");
@@ -104,6 +105,35 @@ namespace ShapefileToMySQL2
             Console.WriteLine("总运行时间：" + sw.Elapsed);
             Console.WriteLine("测量实例得出的总运行时间（毫秒为单位）：" + sw.ElapsedMilliseconds);
             Console.ReadKey();
+        }
+
+        public static void Progress3()
+        {
+            string filePath = @"D:\Data\shape\wh\Link11现状_WGS84_7_北京地方坐标系\Link11现状_WGS84_7_北京地方坐标系.shp";
+            ShapeFile sf = new ShapeFile(filePath, null, true);
+            sf.createTable();
+            DataTable bufferTable;
+            int batchSize = 1000;
+
+            int quotient = sf.FeatureCount / batchSize;
+            int remainder = sf.FeatureCount % batchSize;
+
+            for (int i = 0; i < quotient; i++)
+            {
+                uint start = (uint)(i * batchSize);
+                int end = (i + 1) * batchSize - 1;
+                bufferTable = sf.InsertIntoBufferTable(start, end);
+                sf.InsertWithMySqlBulkCopy(bufferTable);
+                sf.ShapefileAndDBaseTable.Clear();
+            }
+            if (remainder != 0)
+            {
+                uint start = (uint)(quotient * batchSize);
+                int end = sf.FeatureCount - 1;
+                bufferTable = sf.InsertIntoBufferTable(start, end);
+                sf.InsertWithMySqlBulkCopy(bufferTable);
+                sf.ShapefileAndDBaseTable.Clear();
+            }
 
         }
     }

@@ -117,6 +117,11 @@ namespace ShapefileToMySQL2
         private int _fileSize;
         private Envelope _envelope;
         private int _featureCount;
+        public int FeatureCount
+        {
+            get { return _featureCount; }
+            set { _featureCount = value; }
+        }
         private bool _fileBasedIndex;   //基于文件的索引 表示有没有shx文件
         private readonly bool _fileBasedIndexWanted;
         private string _filename;
@@ -125,7 +130,6 @@ namespace ShapefileToMySQL2
         private int _srid = -1;
         private BinaryReader _brShapeFile;
         private BinaryReader _brShapeIndex;
-
         /// <summary>
         /// The Dbase-III File for attribute data
         /// </summary>
@@ -345,6 +349,7 @@ namespace ShapefileToMySQL2
                 if (DbaseFile != null)
                     DbaseFile.Open();
                 _isOpen = true;
+                CreateShapefileAndDBaseTable();
             }
         }
 
@@ -930,6 +935,7 @@ namespace ShapefileToMySQL2
                "localhost", "root", "xrt512", "shapefiles");
             MySqlConnection conn = new MySqlConnection(connStr);
             conn.Open();
+
             String sql = GetCreateTableDDL();
             MySqlCommand cmd = new MySqlCommand(sql, conn);
             cmd.ExecuteNonQuery();
@@ -978,7 +984,7 @@ namespace ShapefileToMySQL2
             }
             c.ColumnMapItems = cc;
             c.DestinationTableName = _tableName;
-            c.BatchSize = 20;
+            c.BatchSize = 50;
             c.Upload(d);
         }
 
@@ -1002,24 +1008,60 @@ namespace ShapefileToMySQL2
             d.AcceptChanges();
         }
 
+
+        private DataTable _shapefileAndDBaseTable;
+
+        public DataTable ShapefileAndDBaseTable
+        {
+            get { return _shapefileAndDBaseTable; }
+            set { _shapefileAndDBaseTable = value; }
+        }
+
+        private void CreateShapefileAndDBaseTable()
+        {
+            _shapefileAndDBaseTable = this.DbaseFile.NewTable;//得到的是具有原来表结构的 空表
+            _shapefileAndDBaseTable.Columns.Add(new DataColumn("shapeType", typeof(uint)));
+            _shapefileAndDBaseTable.Columns.Add(new DataColumn("shapeInfo", typeof(byte[])));
+            _shapefileAndDBaseTable.Columns.Add(new DataColumn("minX", typeof(double)));
+            _shapefileAndDBaseTable.Columns.Add(new DataColumn("maxX", typeof(double)));
+            _shapefileAndDBaseTable.Columns.Add(new DataColumn("minY", typeof(double)));
+            _shapefileAndDBaseTable.Columns.Add(new DataColumn("maxY", typeof(double)));
+        }
+
+        public DataTable InsertIntoBufferTable(uint startIndex,int endIndex)
+        {
+            for (uint oid = startIndex; oid <= endIndex; oid++)
+            {
+                DataRow dr = _shapefileAndDBaseTable.NewRow();//创建一个具有相同架构的row
+
+                FeatureDataRow fdr = DbaseFile.GetFeature(oid, DbaseFile.NewTable);
+                fdr.Geometry = ReadGeometry(oid);
+                AssignSameFeild(dr, fdr);
+                IGeometry g = fdr.Geometry;
+                Envelope e = g.EnvelopeInternal;
+                dr["shapeType"] = _shapeType;
+                dr["shapeInfo"] = GeometryToWKB.Write(g);
+                dr["minX"] = e.MinX;
+                dr["maxX"] = e.MaxX;
+                dr["minY"] = e.MinY;
+                dr["maxY"] = e.MaxY;
+                _shapefileAndDBaseTable.Rows.Add(dr);
+            }
+            return _shapefileAndDBaseTable;
+        }
+
+
+
         /// <summary>
-        /// 使用源数据构建一个DataTable对象，用于BulkCopy，但是目发现google code上的MySqlBulkCopy项目是个失败的项目，没有性能的提升
+        /// 使用源数据构建一个DataTable对象，用于BulkCopy，但是目发现google code上的MySqlBulkCopy项目是个失败的项目，没有性能的提升，遂自写XZBulkCopy
         /// </summary>
         /// <param name="d">字典格式的源数据</param>
         /// <returns>构造好的DataTable对象</returns>
-        public DataTable InsertIntoDataTable(Dictionary<uint, FeatureDataRow> d)
+        public DataTable InsertIntoShapefileAndDBaseTable(Dictionary<uint, FeatureDataRow> d)
         {
-            DataTable dt = this.DbaseFile.NewTable;//得到的是具有原来表结构的 空表
-            dt.Columns.Add(new DataColumn("shapeType", typeof(uint)));
-            dt.Columns.Add(new DataColumn("shapeInfo", typeof(byte[])));
-            dt.Columns.Add(new DataColumn("minX", typeof(double)));
-            dt.Columns.Add(new DataColumn("maxX", typeof(double)));
-            dt.Columns.Add(new DataColumn("minY", typeof(double)));
-            dt.Columns.Add(new DataColumn("maxY", typeof(double)));
-
             for (uint oid = 0; oid < _featureCount; oid++)
             {
-                DataRow dr = dt.NewRow();//创建一个具有相同架构的row
+                DataRow dr = _shapefileAndDBaseTable.NewRow();//创建一个具有相同架构的row
                 //这个地方有必要写一个方法，就是如果datarow1的字段名字与datarow2的字段名字一致，则复制前者的值到后者
                 FeatureDataRow fdr = d[oid];
                 AssignSameFeild(dr, fdr);
@@ -1031,9 +1073,9 @@ namespace ShapefileToMySQL2
                 dr["maxX"] = e.MaxX;
                 dr["minY"] = e.MinY;
                 dr["maxY"] = e.MaxY;
-                dt.Rows.Add(dr);
+                _shapefileAndDBaseTable.Rows.Add(dr);
             }
-            return dt;
+            return _shapefileAndDBaseTable;
         }
 
         private void AssignSameFeild(DataRow to,FeatureDataRow from) 
