@@ -12,7 +12,6 @@ using NetTopologySuite;
 using GeoAPI;
 using GeoAPI.Geometries;
 
-
 namespace ShapefileToMySQL2
 {
     /// <summary>
@@ -409,7 +408,6 @@ namespace ShapefileToMySQL2
             return GetGeometriesInViewWithoutFilter(objectlist);
         }
 
-
         private Collection<IGeometry> GetGeometriesInViewWithoutFilter(Collection<uint> oids)
         {
             var result = new Collection<IGeometry>();
@@ -523,8 +521,6 @@ namespace ShapefileToMySQL2
 
         #endregion
 
-
-        //
         private void ParseHeader()
         {
             _fsShapeFile = new FileStream(_filename, FileMode.Open, FileAccess.Read);
@@ -615,12 +611,11 @@ namespace ShapefileToMySQL2
                     SRID = (int)_coordinateSystem.AuthorityCode;
                     _coordsysReadFromFile = true;
                     //GeometryServiceProvider 
-
                 }
                 catch (Exception ex)
                 {
                     Trace.TraceWarning("Coordinate system file '" + projfile + "' found, but could not be parsed. WKT parser returned:" + ex.Message);
-                   //TODO 这个地方有异常：
+                    //TODO 这个地方有异常：
                     //Cannot use GeometryServiceProvider without an assigned IGeometryServices class
                     //throw;
                 }

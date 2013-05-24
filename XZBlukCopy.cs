@@ -12,28 +12,26 @@ namespace ShapefileToMySQL2
 {
     public class XZBlukCopy
     {
-        private ColumnMapItemColl _columnMapItems;
-        private MySqlConnection _destinationDbConnection;
-        private String _destinationTableName;
-        private int _batchSize;//每次批量插入的数量
+        private ColumnMapItemColl _columnMapItems;//column mappings
+        private MySqlConnection _destinationDbConnection; 
+        private String _destinationTableName;//table name in DB 
+        private int _batchSize;//batch size
+
         public ColumnMapItemColl ColumnMapItems
         {
             get { return _columnMapItems; }
             set { _columnMapItems = value; }
         }
-
         public MySqlConnection DestinationDbConnection
         {
             get { return _destinationDbConnection; }
             set { _destinationDbConnection = value; }
         }
-
         public string DestinationTableName
         {
             get { return _destinationTableName; }
             set { _destinationTableName = value; }
         }
-
         public int BatchSize
         {
             get { return _batchSize; }
@@ -65,8 +63,6 @@ namespace ShapefileToMySQL2
                 }
             }
         }
-
-
         public void Upload2(System.Data.DataTable table)
         {
             string connStr = String.Format("server={0};uid={1};pwd={2};database={3}",
@@ -117,7 +113,6 @@ namespace ShapefileToMySQL2
             Console.ReadKey();
         }
     }
-
 
     internal class CommonFunctions
     {
@@ -283,18 +278,17 @@ namespace ShapefileToMySQL2
             _destinationColumn = d;
             _dataType = dt;
         }
+
         public string SourceColumn
         {
             get { return _sourceColumn; }
             set { _sourceColumn = value; }
         }
-
         public string DestinationColumn
         {
             get { return _destinationColumn; }
             set { _destinationColumn = value; }
         }
-
         public string DataType
         {
             get { return _dataType; }
