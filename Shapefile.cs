@@ -904,7 +904,7 @@ namespace ShapefileToMySQL2
                 String columnName = (String)schemaTable.Rows[i]["ColumnName"];
                 Type type = (Type)schemaTable.Rows[i]["DataType"];
                 String typeName = GetMySQLDataTypeFromCSharp(type);
-                buffer.Append(columnName).Append(" ").Append(typeName).Append(",");
+                buffer.Append("`").Append(columnName).Append("` ").Append(typeName).Append(",");
             }
             createTable += buffer.Replace(',', ')', buffer.Length - 1, 1).ToString();
             createTable += "ENGINE = MyISAM";

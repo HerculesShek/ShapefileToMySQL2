@@ -132,13 +132,13 @@ namespace ShapefileToMySQL2
                 case ColumnProperty.Source:
                     foreach (XZColumnMapItem columnMapItem in mapItemCollection)
                     {
-                        builder.AppendFormat("{0},", columnMapItem.SourceColumn);
+                        builder.AppendFormat("`{0}`,", columnMapItem.SourceColumn);
                     }
                     break;
                 case ColumnProperty.Destination:
                     foreach (XZColumnMapItem columnMapItem in mapItemCollection)
                     {
-                        builder.AppendFormat("{0},", columnMapItem.DestinationColumn);
+                        builder.AppendFormat("`{0}`,", columnMapItem.DestinationColumn);
                     }
                     break;
                 default:

@@ -8,14 +8,13 @@ namespace ShapefileToMySQL2
 {
     public static class Shapefile2MySQL
     {
-        private static int batchSize = 2000;
+        private static int batchSize = 15000;
 
         public static int BatchSize
         {
             get { return batchSize; }
             set { batchSize = value; }
         }
-
 
         public static TimeSpan ExportToDB(String filePath, String tableName)
         {
