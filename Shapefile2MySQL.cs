@@ -32,7 +32,7 @@ namespace ShapefileToMySQL2
                 uint start = (uint)(i * batchSize);
                 int end = (i + 1) * batchSize - 1;
                 bufferTable = sf.InsertIntoBufferTable(start, end);
-                sf.InsertWithMySqlBulkCopy(bufferTable);
+                sf.InsertWithMySqlBulkCopy2(bufferTable);
                 sf.ShapefileAndDBaseTable.Clear();
             }
             if (remainder != 0)
@@ -40,7 +40,7 @@ namespace ShapefileToMySQL2
                 uint start = (uint)(quotient * batchSize);
                 int end = sf.FeatureCount - 1;
                 bufferTable = sf.InsertIntoBufferTable(start, end);
-                sf.InsertWithMySqlBulkCopy(bufferTable);
+                sf.InsertWithMySqlBulkCopy2(bufferTable);
                 sf.ShapefileAndDBaseTable.Clear();
             }
             sw.Stop();

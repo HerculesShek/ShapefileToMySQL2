@@ -63,55 +63,7 @@ namespace ShapefileToMySQL2
                 }
             }
         }
-        public void Upload2(System.Data.DataTable table)
-        {
-            string connStr = String.Format("server={0};uid={1};pwd={2};database={3}",
-              "localhost", "root", "xrt512", "shapefiles");
-            MySqlConnection conn = new MySqlConnection(connStr);
-            conn.Open();
-            int c = table.Rows.Count;
-
-            String sql = "insert into m values(";
-            int l = sql.Length;
-            StringBuilder buffer = new StringBuilder();
-            Random r = new Random();
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            //计时代码
-            Console.WriteLine("\r\n 开始导入数据。。。。");
-            MySqlCommand cmd = new MySqlCommand();
-            cmd.Connection = conn;
-            int cc = 0;
-            for (int i = 0; i < c; i++)
-            {
-                int ii = (i + 1) % BatchSize;    //标记当前模运算的结果 注意i+1
-                buffer.Append("@t" + i + "),(");
-                if (ii == 0 || i == c - 1)
-                {
-                    sql += buffer.Replace(",(", "", buffer.Length - 2, 2).ToString();
-                    //Console.WriteLine(sql);
-                    cmd.CommandText = sql;
-                    cmd.Parameters.Clear(); //清除上一次传入的参数！
-                    for (int j = 0; j < (ii == 0 ? BatchSize : (i + 1) % BatchSize); j++)
-                    {
-                        //Console.WriteLine(j);
-                        int m = j + BatchSize * cc;
-                        cmd.Parameters.Add(new MySqlParameter("@t" + m, new byte[] { 22, 42, 52, 6, 1, 3, 25, 123, 196, 45, 6, 7 }));
-                    }
-                    cmd.ExecuteNonQuery();
-                    buffer.Clear();
-                    sql = sql.Substring(0, l);
-                    ++cc;
-                }
-            }
-            conn.Clone();
-            Console.Write("导入结束！\r\n");
-            sw.Stop();
-            Console.WriteLine("总运行时间：" + sw.Elapsed);
-            Console.WriteLine("测量实例得出的总运行时间（毫秒为单位）：" + sw.ElapsedMilliseconds);
-            Console.ReadKey();
-        }
+       
     }
 
     internal class CommonFunctions
@@ -157,11 +109,18 @@ namespace ShapefileToMySQL2
             StringBuilder builder = new StringBuilder();
             foreach (XZColumnMapItem columnMapItem in mapItemCollection)
             {
-                string constructedValue = ConstructIndividualValue(columnMapItem.DataType,
-                                                                   row[columnMapItem.SourceColumn].ToString());
+                //TODO 当columnMapItem的DataType是"System.Byte[]"的时候问题很棘手
+                string value = row[columnMapItem.SourceColumn].ToString();
+                if (columnMapItem.DataType == "System.Byte[]")
+                {
+                    byte[] bytesData = (byte[])row[columnMapItem.SourceColumn];
+                    value = System.Text.Encoding.UTF8.GetString(bytesData);
+                }
+
+                string constructedValue = ConstructIndividualValue(columnMapItem.DataType, value);
                 builder.Append(constructedValue);
             }
-            return "("+builder.ToString().Substring(0, builder.ToString().Length - 1)+"),";
+            return "(" + builder.ToString().Substring(0, builder.ToString().Length - 1) + "),";
         }
 
         private string ConstructIndividualValue(string dataType, string value)

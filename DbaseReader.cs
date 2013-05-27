@@ -229,7 +229,7 @@ namespace ShapefileToMySQL2
         }
         private static Encoding GetDbaseLanguageDriver(byte dbasecode, string fileName)
         {
-            //TODO 看一下文件的编码格式 0的话就是UTF-8
+            // 看一下文件的编码格式 0的话就是UTF-8
             Console.WriteLine("dbasecode: " + dbasecode);
             switch (dbasecode)
             {
@@ -490,7 +490,6 @@ namespace ShapefileToMySQL2
             }
         }
 
-
         private FeatureDataTable _baseTable;
         private bool _includeOid;
 
@@ -551,7 +550,6 @@ namespace ShapefileToMySQL2
             get { return _baseTable.Clone(); }
         }
 
-
         private byte[] _currentRecordBuffer;    //作为当前读到的记录的缓存
         private uint _currentRecordOid = 0xffffffff;
 
@@ -590,9 +588,11 @@ namespace ShapefileToMySQL2
                 }
             }
         }
+
         public Encoding FileEncoding {
             get { return this._fileEncoding; }
         }
+
         /// <summary>
         /// Event invoker for <see cref="EncodingChanged"/> event.
         /// </summary>
@@ -603,7 +603,6 @@ namespace ShapefileToMySQL2
             if (EncodingChanged != null)
                 EncodingChanged(this, e);
         }
-
 
         /// <summary>
         /// Gets the feature at the specified Object ID
@@ -630,7 +629,6 @@ namespace ShapefileToMySQL2
             return dr;
         }
 
-
         public object GetValueByColumnName(String name)
         {
             //CurrentRecordOid = oid;
@@ -643,7 +641,6 @@ namespace ShapefileToMySQL2
             }
             return "a wrong columu name!!";
         }
-
 
         private static readonly NumberFormatInfo Nfi = NumberFormatInfo.InvariantInfo;
 
@@ -661,7 +658,7 @@ namespace ShapefileToMySQL2
                     //return _encoding == null
                     //    ? _fileEncoding.GetString(tmpBuffer).Replace("\0", "").Trim()
                     //    : _encoding.GetString(tmpBuffer).Replace("\0", "").Trim();
-                    //TODO 未解决中文乱码问题 修改的代码
+                    // 未解决中文乱码问题 修改的代码
                     return Encoding.Default.GetString(tmpBuffer).Replace("\0", "").Trim();
 
                 case TypeCode.Double:
@@ -727,7 +724,6 @@ namespace ShapefileToMySQL2
                         //                                                     dbf.DataType + "'"));
                                                      TypeByTypeCode(dbf.DataTypeCode) + "'"));
             }
-
         }
 
         /// <summary>

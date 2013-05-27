@@ -512,7 +512,7 @@ namespace ShapefileToMySQL2
                 _srid = value;
                 lock (GspLock)
                 {
-                    //TODO 这里的工厂老是报错？？？ 解决方法是把原来的sharpmap项目中的app.config文件的东西复制到当前的项目中
+                    // 这里的工厂老是报错 解决方法是把原来的sharpmap项目中的app.config文件的东西复制到当前的项目中
                     IGeometryServices ntsFromGeoApi = new NtsGeometryServices();
                     Factory = GeometryServiceProvider.Instance.CreateGeometryFactory(_srid);
                 }
@@ -581,9 +581,9 @@ namespace ShapefileToMySQL2
                     //读取实体内容：
                     //读取记录号
                     _brShapeFile.BaseStream.Seek(offset, 0);
-                    // TODO 这个地方没有乘以2 返回的结果是正确的，这个oid可以不用
+                    // HACK 这个地方没有乘以2 返回的结果是正确的，这个oid可以不用
                     int oid = SwapByteOrder(_brShapeFile.ReadInt32());
-                    //TODO 这里拿到了对象的二进制数据 用二进制数据构建几何对象
+                    // 这里拿到了对象的二进制数据 用二进制数据构建几何对象
                     _brShapeFile.BaseStream.Seek(offset + 8, 0);
                     Byte[] recordInfo = _brShapeFile.ReadBytes(dataLength);
 
@@ -785,7 +785,7 @@ namespace ShapefileToMySQL2
                     var polygonCount = 0;
                     for (var i = 0; i < rings.Length; i++)
                     {
-                        //TODO 把IsCCW改为IsCCW();
+                        // 把IsCCW改为IsCCW();
                         isCounterClockWise[i] = rings[i].IsCCW();
                         if (!isCounterClockWise[i])
                             polygonCount++;

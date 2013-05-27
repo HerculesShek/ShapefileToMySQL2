@@ -12,8 +12,8 @@ namespace ShapefileToMySQL2
     {
         static void Main(string[] args)
         {
-             //Progress();
-             Progress3();
+             Progress();
+             //Progress3();
 
             //Console.WriteLine(typeof(byte[]).ToString());
             //Console.ReadKey();
