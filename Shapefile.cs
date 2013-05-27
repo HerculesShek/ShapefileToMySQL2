@@ -972,14 +972,14 @@ namespace ShapefileToMySQL2
             for (int i = 0; i < d.Columns.Count; i++)
             {
                 XZColumnMapItem item = new XZColumnMapItem();
-                item.DataType = d.Columns[i].DataType.ToString();
+                item.DataType = d.Columns[i].DataType.Name;
                 item.DestinationColumn = d.Columns[i].ColumnName;
                 item.SourceColumn = d.Columns[i].ColumnName;
                 cc.Add(item);
             }
             c.ColumnMapItems = cc;
             c.DestinationTableName = _tableName;
-            c.BatchSize = 50;
+            c.BatchSize = 237;
             c.Upload(d);
         }
 

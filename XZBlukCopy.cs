@@ -13,7 +13,7 @@ namespace ShapefileToMySQL2
     public class XZBlukCopy
     {
         private ColumnMapItemColl _columnMapItems;//column mappings
-        private MySqlConnection _destinationDbConnection; 
+        private MySqlConnection _destinationDbConnection;
         private String _destinationTableName;//table name in DB 
         private int _batchSize;//batch size
 
@@ -40,22 +40,43 @@ namespace ShapefileToMySQL2
 
         public void Upload(DataTable table)
         {
+            bool includeBlob = false;
+            foreach (XZColumnMapItem columnMapItem in ColumnMapItems)
+            {
+                if (columnMapItem.DataType.ToLower().CompareTo("byte[]") == 0 || columnMapItem.DataType.ToLower().CompareTo("blob") == 0)
+                {
+                    includeBlob = true;
+                    break;
+                }
+            }
+            if (includeBlob)
+            {
+                UploadWithBlob(table);
+            }
+            else {
+                UploadWithoutBlob(table);
+            }
+
+        }
+        
+        public void UploadWithoutBlob(DataTable table)
+        {
             int count = table.Rows.Count;
-            
+
             CommonFunctions functions = new CommonFunctions();
             string sql = functions.ConstructBaseSql(DestinationTableName, ColumnMapItems);
             int baseLength = sql.Length;
-            
+
             StringBuilder buffer = new StringBuilder();
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = DestinationDbConnection;
-            for (int i = 0; i < count; i++)
+            for (int rowIndex = 0; rowIndex < count; rowIndex++)
             {
-                int ii = (i + 1) % BatchSize;    //标记当前模运算的结果 注意i+1
-                buffer.Append(functions.ConstructIndividualRowValue(table.Rows[i], ColumnMapItems));
-                if (ii == 0 || i == count - 1)
+                int flag = (rowIndex + 1) % BatchSize;    //标记当前模运算的结果 注意i+1
+                buffer.Append(functions.ConstructIndividualRowValueWithoutBlob(table.Rows[rowIndex], ColumnMapItems));
+                if (flag == 0 || rowIndex == count - 1)
                 {
-                    sql += buffer.ToString().Substring(0,buffer.Length-1);
+                    sql += buffer.ToString().Substring(0, buffer.Length - 1);
                     cmd.CommandText = sql;
                     cmd.ExecuteNonQuery();
                     buffer.Clear();
@@ -63,7 +84,38 @@ namespace ShapefileToMySQL2
                 }
             }
         }
-       
+
+        // if the ColumnMapItems has a XZColumnMapItem with a blob type, this method will be invoked!
+        public void UploadWithBlob(DataTable table)
+        {
+            int count = table.Rows.Count;
+
+            CommonFunctions functions = new CommonFunctions();
+            string sql = functions.ConstructBaseSql(DestinationTableName, ColumnMapItems);
+            int baseLength = sql.Length;
+
+            StringBuilder buffer = new StringBuilder();
+            MySqlCommand cmd = new MySqlCommand();
+            //cmd.Parameters.Add("a", MySqlDbType.VarChar,255).Value = "";
+            cmd.Connection = DestinationDbConnection;
+            for (int rowIndex = 0; rowIndex < count; rowIndex++)
+            {
+                int flag = (rowIndex + 1) % BatchSize;    //标记当前模运算的结果 注意rowIndex+1
+                //TODO change the string 
+                buffer.Append(functions.ConstIndiRowParaStrWithoutBlob(rowIndex, ColumnMapItems));
+                functions.ConstIndiRowParameterValue(rowIndex, cmd, table.Rows[rowIndex], ColumnMapItems);
+                
+                if (flag == 0 || rowIndex == count - 1)
+                {
+                    sql += buffer.ToString().Substring(0, buffer.Length - 1);
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
+                    buffer.Clear();
+                    sql = sql.Substring(0, baseLength);
+                }
+            }
+        }
+
     }
 
     internal class CommonFunctions
@@ -95,7 +147,7 @@ namespace ShapefileToMySQL2
             return builder.ToString().Substring(0, builder.Length - 1);
         }
 
-        // insert into tableName(A,B,C...) values 
+        //get string "insert into tableName(A,B,C...) values "
         public string ConstructBaseSql(string tableName, ColumnMapItemColl mapItemCollection)
         {
             string columnNames = GetColumnNames(mapItemCollection, ColumnProperty.Destination);
@@ -103,24 +155,78 @@ namespace ShapefileToMySQL2
             return baseSql;
         }
 
-        //  (value1,value2,value3,value4,value5....),
-        public string ConstructIndividualRowValue(DataRow row, ColumnMapItemColl mapItemCollection)
+        //get string "(value1,value2,value3,value4,value5....),"
+        public string ConstructIndividualRowValueWithoutBlob(DataRow row, ColumnMapItemColl mapItemCollection)
         {
             StringBuilder builder = new StringBuilder();
             foreach (XZColumnMapItem columnMapItem in mapItemCollection)
             {
-                //TODO 当columnMapItem的DataType是"System.Byte[]"的时候问题很棘手
                 string value = row[columnMapItem.SourceColumn].ToString();
-                if (columnMapItem.DataType == "System.Byte[]")
-                {
-                    byte[] bytesData = (byte[])row[columnMapItem.SourceColumn];
-                    value = System.Text.Encoding.UTF8.GetString(bytesData);
-                }
-
                 string constructedValue = ConstructIndividualValue(columnMapItem.DataType, value);
                 builder.Append(constructedValue);
             }
             return "(" + builder.ToString().Substring(0, builder.ToString().Length - 1) + "),";
+        }
+
+        //"(?rootName1,?pid1,?pName1,?tid1,?name1,?did1),"
+        public string ConstIndiRowParaStrWithoutBlob(int rowIndex, ColumnMapItemColl mapItemCollection)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (XZColumnMapItem columnMapItem in mapItemCollection)
+            {
+                string columnName = columnMapItem.DestinationColumn.Replace("~", "_");
+                builder.Append("?").Append(columnName).Append("note").Append(rowIndex).Append(",");
+            }
+            return "(" + builder.ToString().Substring(0, builder.ToString().Length - 1) + "),";
+        }
+
+
+        public void ConstIndiRowParameterValue(int rowIndex, MySqlCommand cmd, DataRow row, ColumnMapItemColl mapItemCollection) {
+            foreach (XZColumnMapItem columnMapItem in mapItemCollection)
+            {
+                StringBuilder builder = new StringBuilder();
+                string columnName = columnMapItem.DestinationColumn.Replace("~", "_");
+                builder.Append("?").Append(columnName).Append("note").Append(rowIndex);
+                string parameterName = builder.ToString();
+                cmd.Parameters.Add(parameterName, GetMySQLDataTypeFromCSharp(columnMapItem.DataType)).Value = row[columnMapItem.SourceColumn];
+            }
+        }
+
+        public MySqlDbType GetMySQLDataTypeFromCSharp(string typeName)
+        {
+            switch (typeName.ToLower())
+            {
+                case "uint16":
+                    return MySqlDbType.UInt16;
+                case "uint32":
+                    return MySqlDbType.UInt32;
+                case "uint64":
+                    return MySqlDbType.UInt64;
+                case "byte":
+                    return MySqlDbType.Byte;
+                case "byte[]":
+                    return MySqlDbType.LongBlob;
+                case "bool":
+                    return MySqlDbType.Bit;
+                case "int16":
+                    return MySqlDbType.Int16;
+                case "int32":
+                    return MySqlDbType.Int32;
+                case "int64":
+                    return MySqlDbType.Int64;
+                case "single":
+                    return MySqlDbType.Float;
+                case "double":
+                    return MySqlDbType.Double;
+                case "string":
+                    return MySqlDbType.VarChar;
+                case "datetime":
+                    return MySqlDbType.DateTime;
+                case "object":
+                    return MySqlDbType.Blob;
+                default:
+                    throw new InvalidOperationException("CSharp data type '" + typeName + "' has no matched by MySQL.");
+            }
         }
 
         private string ConstructIndividualValue(string dataType, string value)
@@ -177,6 +283,8 @@ namespace ShapefileToMySQL2
             }
             return returnValue;
         }
+
+       
     }
 
     public enum ColumnProperty
@@ -228,7 +336,7 @@ namespace ShapefileToMySQL2
     {
         private String _sourceColumn;
         private String _destinationColumn;
-        private String _dataType;
+        private String _dataType;//C# DataType.ToString()
 
         public XZColumnMapItem() { }
         public XZColumnMapItem(String s, String d, String dt)
